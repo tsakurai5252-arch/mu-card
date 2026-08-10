@@ -55,22 +55,22 @@
     /* メッセージ表示 */
     .message-box {
       padding: 12px; border-radius: 6px; font-size: 14px; margin-bottom: 15px; text-align: center;
+      white-space: pre-wrap;
     }
     .message-success { background: #c6f6d5; color: #22543d; border: 1px solid #9ae6b4; }
     .message-error { background: #fed7d7; color: #742a2a; border: 1px solid #feb2b2; }
     .hidden { display: none !important; }
   </style>
-  <!-- 白文字にしたい場合 -->
-  <!--
-<div id="common-menu-area">
-  <menu-text>FFFFFF</menu-text>
-</div>
-  -->
+
+  <!-- 共通ヘッダー読み込み & 文字色設定 -->
+  <script src="menu.js"></script>
 </head>
-<!-- 画面の一番上に追加 -->
-<script src="menu.js"></script>
-<div id="common-menu-area"></div>
 <body>
+
+  <!-- ヘッダー挿入エリア（menu-textで文字色を指定） -->
+  <div id="common-menu-area">
+    <menu-text>000000</menu-text>
+  </div>
 
   <div class="container">
     <div class="checkout-panel">
@@ -80,7 +80,7 @@
       <div class="order-summary">
         <div class="order-item">
           <span>注文内容:</span>
-          <span id="itemName">ポイント交換手続き</span>
+          <span id="itemNameDisplay">ポイント交換手続き</span>
         </div>
         <div class="order-total">
           <span>お支払い合計:</span>
@@ -109,32 +109,41 @@
   </div>
 
   <script>
-    // ★デプロイしたGASのウェブアプリURLを設定してください
     const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxH5I-rHTVeI9exOkZc4261pWL3YzZI9Ou2kcAs9QEWNzsdctGaZ_vkBdW-2dKDFg/exec";
 
-    // 決済金額を保持する変数
+    // 決済情報を保持する変数
     let PAYMENT_AMOUNT = 0;
+    let ITEM_NAME = "ポイント交換手続き";
+    let ITEM_ID = "";
 
-    // 画面が開いたときにURLから金額を自動で読み取る処理
+    // 画面オープン時にURLパラメータから金額・商品名・商品IDを取得
     window.onload = function() {
-      // URLの「?」より後ろの文字を取得（例: ?1000 の場合は "1000"）
+      const urlParams = new URLSearchParams(window.location.search);
       let paramValue = window.location.search.substring(1);
 
-      // 「?price=1000」や「?amount=1000」といった形式にも対応できるよう判定
-      if (paramValue.includes('=')) {
-        const urlParams = new URLSearchParams(window.location.search);
-        paramValue = urlParams.get('price') || urlParams.get('amount') || "0pt";
+      // 商品名（?item=プレミアム会員券 または ?itemName=...）
+      const itemParam = urlParams.get('item') || urlParams.get('itemName');
+      if (itemParam) {
+        ITEM_NAME = decodeURIComponent(itemParam);
       }
 
-      // 取得した文字を数字に変換
-      PAYMENT_AMOUNT = parseInt(paramValue, 10);
+      // 商品ID（?id=premium_pass または ?itemId=...）
+      const idParam = urlParams.get('id') || urlParams.get('itemId');
+      if (idParam) {
+        ITEM_ID = idParam;
+      }
 
-      // 数字が取れなかった場合や0以下の場合は初期値（0円）を設定
+      // 金額判定（?price=1000 や ?amount=1000 または 直接 ?1000）
+      if (paramValue.includes('=')) {
+        paramValue = urlParams.get('price') || urlParams.get('amount') || "0";
+      }
+      PAYMENT_AMOUNT = parseInt(paramValue, 10);
       if (isNaN(PAYMENT_AMOUNT) || PAYMENT_AMOUNT <= 0) {
         PAYMENT_AMOUNT = 0;
       }
 
-      // 画面上の金額表示を更新
+      // 画面上の表示を更新
+      document.getElementById('itemNameDisplay').innerText = ITEM_NAME;
       document.getElementById('itemPriceDisplay').innerText = `${PAYMENT_AMOUNT.toLocaleString()}pt`;
     };
 
@@ -157,23 +166,27 @@
       hideMessage();
 
       try {
-        // GASへ決済リクエスト（action: 'pay'）を送信
-        const url = GAS_WEBAPP_URL + "?action=pay";
-        const response = await fetch(url, {
+        const response = await fetch(GAS_WEBAPP_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
             action: 'pay',
             cardNumber: cardNumber,
             pin: pin,
-            amount: PAYMENT_AMOUNT
+            amount: PAYMENT_AMOUNT,
+            itemId: ITEM_ID,
+            itemName: ITEM_NAME
           })
         });
 
         const result = await response.json();
 
         if (result.success) {
-          showMessage(`決済が完了しました！\n残高: ¥${Number(result.newBalance).toLocaleString()}`, true);
+          let msg = `決済が完了しました！\n残高: ${Number(result.newBalance).toLocaleString()}pt`;
+          if (result.rank === 'ゴールド') {
+            msg += `\n👑 ゴールド会員に昇格しました！`;
+          }
+          showMessage(msg, true);
           document.getElementById('payForm').reset();
         } else {
           showMessage("決済エラー: " + result.message, false);
