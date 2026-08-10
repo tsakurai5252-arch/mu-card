@@ -11,23 +11,66 @@ menuStyle.textContent = `
     max-width: 1000px;
     margin: 0 auto;
     display: flex;
-    justify-content: center;
+    align-items: center;
+    justify-content: space-between;
     gap: 12px;
     list-style: none;
-    padding: 1;
+    padding: 0;
+  }
+  .header-main-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-logo {
+    max-height: 35px;
+    width: auto;
   }
   .common-nav-link {
     color: #000000;
     text-decoration: none;
     font-size: 14px;
     font-weight: bold;
-    padding: 8px 16px;
+    padding: 6px 10px;
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.15);
-    transition: background 0.2s;
+    white-space: nowrap;
+    transition: opacity 0.2s;
   }
   .common-nav-link:hover {
-    background: rgba(255, 255, 255, 0.3);
+    opacity: 0.6;
+  }
+  .header-copyright {
+    font-size: 12px;
+    color: #333333;
+    white-space: nowrap;
+    margin: 0;
+  }
+
+  /* ★スマートフォン向けの自動縮小・配置調整 (幅768px以下) */
+  @media (max-width: 768px) {
+    .common-header-bar {
+      padding: 8px 10px;
+    }
+    .common-nav-list {
+      flex-direction: column;
+      gap: 6px;
+    }
+    .header-main-group {
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .header-logo {
+      max-height: 24px;
+    }
+    .common-nav-link {
+      font-size: 11px;
+      padding: 4px 6px;
+    }
+    .header-copyright {
+      font-size: 9px;
+      opacity: 0.8;
+    }
   }
 `;
 document.head.appendChild(menuStyle);
@@ -40,11 +83,13 @@ window.addEventListener('DOMContentLoaded', () => {
       <header class="common-header-bar">
         <nav>
           <div class="common-nav-list">
-           <image src="logo.png">
-            <a href="prize.html" class="common-nav-link">賞品ショップ</a>
-            <a href="mu-card-user.html" class="common-nav-link">会員マイページ</a>
-            <a href="index.html" class="common-nav-link">ページトップ</a>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<p>© HomeMade Tools Project All Rights Reserved.</p>
+            <div class="header-main-group">
+              <img src="logo.png" alt="ロゴ" class="header-logo">
+              <a href="prize.html" class="common-nav-link">賞品ショップ</a>
+              <a href="mu-card-user.html" class="common-nav-link">会員マイページ</a>
+              <a href="index.html" class="common-nav-link">ページトップ</a>
+            </div>
+            <p class="header-copyright">&copy; HomeMade Tools Project All Rights Reserved.</p>
           </div>
         </nav>
       </header>
