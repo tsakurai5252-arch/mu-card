@@ -26,6 +26,7 @@
     .item-card {
       background: var(--card-bg); padding: 20px; border-radius: 12px;
       box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center;
+      display: flex; flex-direction: column; justify-content: space-between;
     }
     .item-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
     .item-price { font-size: 22px; color: var(--secondary); font-weight: bold; margin-bottom: 15px; }
@@ -37,11 +38,16 @@
     }
     .btn-buy:hover { opacity: 0.9; }
   </style>
+
+  <!-- 共通ヘッダー読み込み -->
+  <script src="menu.js"></script>
 </head>
-<!-- 画面の一番上に追加 -->
-<script src="menu.js"></script>
-<div id="common-menu-area"></div>
 <body>
+
+  <!-- 共通ヘッダー挿入エリア -->
+  <div id="common-menu-area">
+    <menu-text>000000</menu-text>
+  </div>
 
   <div class="container">
     <header>
@@ -50,34 +56,42 @@
     </header>
 
     <div class="item-grid">
-      <!-- 商品1 -->
+      <!-- 商品1: 寄付 -->
       <div class="item-card">
-        <div class="item-title">運営に寄付</div>
-        <div class="item-price">1pt～</div>
-        <button  class="btn-buy" onclick="location.href='point-k.html'">ポイント交換する</button>
-      </div>
-      <!-- 商品2 -->
-      <div class="item-card">
-        <div class="item-title">プレミアム会員権</div>
-        <div class="item-price">5,980pt</div>
-        <button class="btn-buy" onclick="goToCredit(5980)">ポイント交換する</button>
+        <div>
+          <div class="item-title">運営に寄付</div>
+          <div class="item-price">1pt～</div>
+        </div>
+        <button class="btn-buy" onclick="location.href='point-k.html'">ポイント交換する</button>
       </div>
 
-      <!-- 商品3 -->
-       <!--
+      <!-- 商品2: プレミアム会員券（ゴールド昇格対象） -->
       <div class="item-card">
-        <div class="item-title">プレミアム会員権 (1ヶ月)</div>
-        <div class="item-price">3,000pt</div>
-        <button class="btn-buy" onclick="goToCredit(3000)">ポイント交換する</button>
+        <div>
+          <div class="item-title">プレミアム会員券</div>
+          <div class="item-price">5,980pt</div>
+        </div>
+        <button class="btn-buy" onclick="goToCredit(5980, 'プレミアム会員券', 'premium_pass')">ポイント交換する</button>
       </div>
+
+      <!-- 商品3（非表示・コメントアウト中） -->
+      <!--
+      <div class="item-card">
+        <div>
+          <div class="item-title">プレミアム会員権 (1ヶ月)</div>
+          <div class="item-price">3,000pt</div>
+        </div>
+        <button class="btn-buy" onclick="goToCredit(3000, 'プレミアム会員権 (1ヶ月)', 'pass_1month')">ポイント交換する</button>
+      </div>
+      -->
     </div>
   </div>
--->
+
   <script>
-    // 指定された値段をURLに付けて決済画面へ移動する処理
-    function goToCredit(price) {
-      // mucredit.html?500 のような形式でページを移動します
-      window.location.href = "mucredit.html?" + price;
+    // 値段・商品名・商品IDをURLパラメータとして決済画面へ引き渡す関数
+    function goToCredit(price, itemName, itemId) {
+      const encodedItem = encodeURIComponent(itemName || '');
+      window.location.href = `mucredit.html?price=${price}&item=${encodedItem}&id=${itemId || ''}`;
     }
   </script>
 </body>
