@@ -27,7 +27,6 @@ menuStyle.textContent = `
     width: auto;
   }
   .common-nav-link {
-    color: #000000;
     text-decoration: none;
     font-size: 14px;
     font-weight: bold;
@@ -41,36 +40,18 @@ menuStyle.textContent = `
   }
   .header-copyright {
     font-size: 12px;
-    color: #333333;
     white-space: nowrap;
     margin: 0;
   }
 
-  /* ★スマートフォン向けの自動縮小・配置調整 (幅768px以下) */
+  /* スマホ向け対応 */
   @media (max-width: 768px) {
-    .common-header-bar {
-      padding: 8px 10px;
-    }
-    .common-nav-list {
-      flex-direction: column;
-      gap: 6px;
-    }
-    .header-main-group {
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .header-logo {
-      max-height: 24px;
-    }
-    .common-nav-link {
-      font-size: 11px;
-      padding: 4px 6px;
-    }
-    .header-copyright {
-      font-size: 9px;
-      opacity: 0.8;
-    }
+    .common-header-bar { padding: 8px 10px; }
+    .common-nav-list { flex-direction: column; gap: 6px; }
+    .header-main-group { gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .header-logo { max-height: 24px; }
+    .common-nav-link { font-size: 11px; padding: 4px 6px; }
+    .header-copyright { font-size: 9px; opacity: 0.8; }
   }
 `;
 document.head.appendChild(menuStyle);
@@ -78,21 +59,50 @@ document.head.appendChild(menuStyle);
 // 共通メニューのHTML構造を生成して挿入
 window.addEventListener('DOMContentLoaded', () => {
   const menuArea = document.getElementById('common-menu-area');
-  if (menuArea) {
-    menuArea.innerHTML = `
-      <header class="common-header-bar">
-        <nav>
-          <div class="common-nav-list">
-            <div class="header-main-group">
-              <img src="logo.png" alt="MU" class="header-logo">
-              <a href="prize.html" class="common-nav-link">賞品ショップ</a>
-              <a href="mu-card-user.html" class="common-nav-link">会員マイページ</a>
-              <a href="index.html" class="common-nav-link">ページトップ</a>
-            </div>
-            <p class="header-copyright">&copy; HomeMade Tools Project All Rights Reserved.</p>
+  if (!menuArea) return;
+
+  // ★<menu-text>タグの内容を読み取る（なければ黒 #000000）
+  let textColor = '#000000';
+  const menuTextTag = document.querySelector('menu-text');
+
+  if (menuTextTag) {
+    // 空白や#を除去して大文字化
+    const rawVal = menuTextTag.textContent.trim().replace('#', '').toUpperCase();
+    if (rawVal === 'FFFFFF') {
+      textColor = '#FFFFFF';
+    } else if (rawVal === '000000') {
+      textColor = '#000000';
+    } else if (rawVal.length === 6) {
+      textColor = '#' + rawVal; // その他のカラーコードが指定された場合にも対応
+    }
+  }
+
+  // メニューのHTML描画
+  menuArea.innerHTML = `
+    <header class="common-header-bar" id="commonHeader">
+      <nav>
+        <div class="common-nav-list">
+          <div class="header-main-group">
+            <img src="logo.png" alt="ロゴ" class="header-logo">
+            <a href="prize.html" class="common-nav-link">賞品ショップ</a>
+            <a href="mu-card-user.html" class="common-nav-link">会員マイページ</a>
+            <a href="index.html" class="common-nav-link">ページトップ</a>
           </div>
-        </nav>
-      </header>
-    `;
+          <p class="header-copyright">&copy; HomeMade Tools Project All Rights Reserved.</p>
+        </div>
+      </nav>
+    </header>
+  `;
+
+  // 指定された文字色（textColor）をリンク・著作権表記に適用
+  const header = document.getElementById('commonHeader');
+  if (header) {
+    header.querySelectorAll('.common-nav-link').forEach(link => {
+      link.style.color = textColor;
+    });
+    const copyright = header.querySelector('.header-copyright');
+    if (copyright) {
+      copyright.style.color = textColor;
+    }
   }
 });
