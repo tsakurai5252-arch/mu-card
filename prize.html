@@ -37,6 +37,14 @@
       font-size: 15px; transition: opacity 0.2s;
     }
     .btn-buy:hover { opacity: 0.9; }
+
+    /* 購入済みボタン用のスタイル */
+    .btn-buy:disabled {
+      background: #cbd5e0;
+      color: #718096;
+      cursor: not-allowed;
+      opacity: 1;
+    }
   </style>
 
   <!-- 共通ヘッダー読み込み -->
@@ -71,7 +79,7 @@
           <div class="item-title">プレミアム会員券</div>
           <div class="item-price">5,980pt</div>
         </div>
-        <button class="btn-buy" onclick="goToCredit(5980, 'プレミアム会員券', 'premium_pass')">ポイント交換する</button>
+        <button id="btn-premium" class="btn-buy" onclick="goToCredit(5980, 'プレミアム会員券', 'premium_pass')">ポイント交換する</button>
       </div>
 
       <!-- 商品3（非表示・コメントアウト中） -->
@@ -93,6 +101,33 @@
       const encodedItem = encodeURIComponent(itemName || '');
       window.location.href = `mucredit.html?price=${price}&item=${encodedItem}&id=${itemId || ''}`;
     }
+
+    // ユーザーの購入状態に応じてUIを切り替える処理
+    function checkPremiumStatus(cardInfo) {
+      if (!cardInfo) return;
+      
+      // 所持アイテム（L列データ）を取得し配列化
+      const ownedItems = Array.isArray(cardInfo.items) 
+        ? cardInfo.items 
+        : (cardInfo.items ? cardInfo.items.split(',') : []);
+      
+      // L列に「プレミアム」が含まれる場合、ボタンを「購入済み」にして無効化
+      if (ownedItems.includes('プレミアム')) {
+        const premiumBtn = document.getElementById('btn-premium');
+        if (premiumBtn) {
+          premiumBtn.innerText = '購入済み';
+          premiumBtn.disabled = true;
+        }
+      }
+    }
+
+    // 画面読み込み時に実行する処理の例
+    window.addEventListener('DOMContentLoaded', () => {
+      // ※実際のご利用環境におけるログイン中のカード情報、または
+      // セッションストレージ等から取得したカードオブジェクトをここに渡してください。
+      // 例: const currentCard = JSON.parse(sessionStorage.getItem('activeCard'));
+      // checkPremiumStatus(currentCard);
+    });
   </script>
 </body>
 </html>
