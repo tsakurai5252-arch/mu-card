@@ -87,6 +87,7 @@ window.addEventListener('DOMContentLoaded', () => {
             <a href="prize.html" class="common-nav-link">賞品ショップ</a>
             <a href="mu-card-user.html" class="common-nav-link">会員マイページ</a>
             <a href="index.html" class="common-nav-link">ページトップ</a>
+            <a href="blog.html" class="common-nav-link">運営ブログ</a>
             <a href="https://tsakurai5252-arch.github.io/my-page/" class="common-nav-link">会員ポータル(別サイト)</a>
           </div>
           <p class="header-copyright">&copy; HomeMade Tools Project All Rights Reserved.</p>
