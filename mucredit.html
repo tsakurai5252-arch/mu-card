@@ -13,6 +13,7 @@
       --card-bg: #ffffff;
       --text: #2d3748;
       --danger: #e53e3e;
+      --success: #22543d;
     }
 
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -43,7 +44,7 @@
       border-radius: 6px; font-size: 15px; outline: none;
     }
     input:focus { border-color: var(--secondary); }
-    
+        
     .btn-pay {
       width: 100%; background: var(--secondary); color: white; padding: 14px;
       border: none; border-radius: 6px; cursor: pointer; font-weight: bold;
@@ -57,17 +58,16 @@
       padding: 12px; border-radius: 6px; font-size: 14px; margin-bottom: 15px; text-align: center;
       white-space: pre-wrap;
     }
-    .message-success { background: #c6f6d5; color: #22543d; border: 1px solid #9ae6b4; }
-    .message-error { background: #fed7d7; color: #742a2a; border: 1px solid #feb2b2; }
+    .message-success { background: #c6f6d5; color: var(--success); border: 1px solid #9ae6b4; }
+    .message-error { background: #fed7d7; color: var(--danger); border: 1px solid #feb2b2; }
     .hidden { display: none !important; }
   </style>
 
-  <!-- 共通ヘッダー読み込み & 文字色設定 -->
+  <!-- 共通ヘッダー読み込み -->
   <script src="menu.js"></script>
 </head>
 <body>
-
-  <!-- ヘッダー挿入エリア（menu-textで文字色を指定） -->
+  <!-- ヘッダー挿入エリア -->
   <div id="common-menu-area">
     <menu-text>000000</menu-text>
   </div>
@@ -95,7 +95,7 @@
       <form id="payForm" onsubmit="executePayment(event)">
         <div class="form-group">
           <label for="cardNumber">MUカード番号 (15桁)</label>
-          <input type="text" id="cardNumber" required maxlength="15" placeholder="例: 453212345678901">
+          <input type="text" id="cardNumber" required maxlength="15" pattern="\d{15}" placeholder="例: 453212345678901">
         </div>
 
         <div class="form-group">
@@ -119,7 +119,7 @@
     // 画面オープン時にURLパラメータから金額・商品名・商品IDを取得
     window.onload = function() {
       const urlParams = new URLSearchParams(window.location.search);
-      let paramValue = window.location.search.substring(1);
+      const rawSearch = window.location.search.substring(1);
 
       // 商品名（?item=プレミアム会員券 または ?itemName=...）
       const itemParam = urlParams.get('item') || urlParams.get('itemName');
@@ -133,11 +133,13 @@
         ITEM_ID = idParam;
       }
 
-      // 金額判定（?price=1000 や ?amount=1000 または 直接 ?1000）
-      if (paramValue.includes('=')) {
-        paramValue = urlParams.get('price') || urlParams.get('amount') || "0";
+      // 金額判定（キー指定 `price`/`amount` または `?1000` の直接数値指定に対応）
+      let priceVal = urlParams.get('price') || urlParams.get('amount');
+      if (!priceVal && rawSearch && !rawSearch.includes('=')) {
+        priceVal = rawSearch;
       }
-      PAYMENT_AMOUNT = parseInt(paramValue, 10);
+
+      PAYMENT_AMOUNT = parseInt(priceVal, 10);
       if (isNaN(PAYMENT_AMOUNT) || PAYMENT_AMOUNT <= 0) {
         PAYMENT_AMOUNT = 0;
       }
@@ -166,7 +168,8 @@
       hideMessage();
 
       try {
-        const response = await fetch(GAS_WEBAPP_URL, {
+        const url = GAS_WEBAPP_URL + "?action=pay";
+        const response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
@@ -206,8 +209,7 @@
       msgBox.className = "message-box " + (isSuccess ? "message-success" : "message-error");
     }
 
-    function hideMessage() {
-      const msgBox = document.getElementById('messageArea');
+    function hideMessage() {      const msgBox = document.getElementById('messageArea');
       msgBox.className = "message-box hidden";
     }
   </script>
