@@ -51,7 +51,7 @@
       border-radius: 6px; font-size: 15px; outline: none;
     }
     input:focus, select:focus { border-color: var(--secondary); }
-    
+        
     .btn {
       width: 100%; background: var(--secondary); color: white; padding: 12px;
       border: none; border-radius: 6px; cursor: pointer; font-weight: 600;
@@ -69,6 +69,7 @@
       color: white; background: linear-gradient(135deg, #2d3748, #1a202c);
       box-shadow: 0 8px 15px rgba(0,0,0,0.2); position: relative; overflow: hidden;
     }
+    .card-preview.ノーマル { background: linear-gradient(135deg, #2d3748, #1a202c); }
     .card-preview.ブロンズ { background: linear-gradient(135deg, #7b341e, #9c4221); }
     .card-preview.シルバー { background: linear-gradient(135deg, #718096, #a0aec0); }
     .card-preview.ゴールド { background: linear-gradient(135deg, #b7791f, #d69e2e); }
@@ -105,15 +106,16 @@
       padding: 15px; border-radius: 6px; font-size: 13px; margin-bottom: 15px;
     }
   </style>
-  <!-- 白文字にしたい場合 -->
-<div id="common-menu-area">
-  <menu-text>FFFFFF</menu-text>
-</div>
+
+  <!-- 共通ヘッダー制御スクリプト -->
+  <script src="menu.js"></script>
 </head>
-<!-- 画面の一番上に追加 -->
-<script src="menu.js"></script>
-<div id="common-menu-area"></div>
 <body>
+
+  <!-- 共通メニュー配置（文字色設定） -->
+  <div id="common-menu-area">
+    <menu-text>FFFFFF</menu-text>
+  </div>
 
   <div class="container">
     <header>
@@ -173,7 +175,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label>初期チャージ金額 (円)</label>
+            <label>初期チャージ金額 (pt)</label>
             <input type="number" id="regInitialBalance" value="0" min="0" step="1" placeholder="例: 1000">
           </div>
           <button type="submit" class="btn" id="regSubmitBtn">カードを新規登録する</button>
@@ -183,7 +185,6 @@
 
     <!-- 3. 【ログイン後】マイページ画面 -->
     <div id="myPageSection" class="hidden">
-      
       <!-- 自分自身のカード券面表示 -->
       <div class="card-preview-wrapper">
         <div class="card-preview ノーマル" id="userCardPreview">
@@ -219,7 +220,7 @@
         <div id="act-deposit" class="tab-content active">
           <form onsubmit="handleUserDeposit(event)">
             <div class="form-group">
-              <label>チャージ金額 (円)</label>
+              <label>チャージ金額 (pt)</label>
               <input type="number" id="userDepositAmount" required min="1" step="1" placeholder="例: 1000">
             </div>
             <button type="submit" class="btn btn-deposit">チャージを実行する</button>
@@ -243,12 +244,10 @@
 
       <!-- ログアウトボタン -->
       <button class="btn btn-logout" onclick="logout()">ログアウト</button>
-
     </div>
   </div>
 
   <script>
-    // ★デプロイしたGASのウェブアプリURLを設定します
     const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxH5I-rHTVeI9exOkZc4261pWL3YzZI9Ou2kcAs9QEWNzsdctGaZ_vkBdW-2dKDFg/exec";
 
     let currentCard = null;
@@ -272,7 +271,7 @@
       }
     }
 
-    // ログイン前のタブ切り替え（ログイン / 新規登録）
+    // ログイン前のタブ切り替え
     function switchAuthTab(tabId) {
       document.querySelectorAll('#authNavTabs .top-tab-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById('tab-login').classList.remove('active');
@@ -282,7 +281,7 @@
       document.getElementById(tabId).classList.add('active');
     }
 
-    // マイページ内の機能切り替え（チャージ / 利用停止）
+    // マイページ内の機能切り替え
     function switchActionTab(actId) {
       document.querySelectorAll('.action-tab-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById('act-deposit').classList.remove('active');
@@ -292,7 +291,7 @@
       document.getElementById(actId).classList.add('active');
     }
 
-    // ログイン処理
+    // ログイン処理（ステータス判定を強化）
     async function handleLogin(e) {
       e.preventDefault();
       const cardNumber = document.getElementById('loginCardNumber').value.trim();
@@ -303,17 +302,23 @@
       loginBtn.innerText = '照会中...';
 
       const res = await sendGasApi({ action: 'getAllCards' });
-
       loginBtn.disabled = false;
       loginBtn.innerText = 'ログインする';
 
       if (res.success && res.cards) {
-        const target = res.cards.find(c => c.cardNumber === cardNumber && c.pin === pin);
+        const target = res.cards.find(c => String(c.cardNumber) === cardNumber && String(c.pin) === pin);
         if (target) {
-          if (target.status === 'FALSE') {
+          // 大文字・小文字両対応で無効判定
+          const cardStatus = String(target.status || '').toUpperCase().trim();
+          if (cardStatus === 'FALSE') {
             alert('このカードは利用停止（無効化）されています。');
             return;
           }
+          if (cardStatus === 'PAUSE') {
+            alert('このカードは一時停止（有効期限切れ等）されています。');
+            return;
+          }
+
           currentCard = target;
           renderMyPage();
           document.getElementById('authNavTabs').classList.add('hidden');
@@ -354,7 +359,6 @@
       if (res.success) {
         alert(`カードの登録が完了しました！\n\n【発行されたカード番号】\n${res.cardNumber}\n\n※ログイン時に使用しますのでお控えください。`);
         
-        // ログインフォームに番号をセットしてログイン画面に移動
         document.getElementById('loginCardNumber').value = res.cardNumber;
         document.getElementById('loginPin').value = formData.pin;
         switchAuthTab('tab-login');
@@ -374,7 +378,7 @@
       document.getElementById('userBalance').innerText = `${Number(currentCard.balance).toLocaleString()}pt`;
 
       const preview = document.getElementById('userCardPreview');
-      preview.className = 'card-preview ' + currentCard.rank;
+      preview.className = 'card-preview ' + (currentCard.rank || 'ノーマル');
     }
 
     // 入金（チャージ）処理
@@ -389,7 +393,7 @@
       });
 
       if (res.success) {
-        alert(res.message);
+        alert(`${Number(amount).toLocaleString()}pt のチャージが完了しました。`);
         currentCard.balance = res.newBalance;
         renderMyPage();
         document.getElementById('userDepositAmount').value = '';
