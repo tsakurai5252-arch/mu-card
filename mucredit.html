@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MU Card 決済画面</title>
+  <style>
+    :root {
+      --primary: #1a365d;
+      --secondary: #2b6cb0;
+      --bg: #f7fafc;
+      --card-bg: #ffffff;
+      --text: #2d3748;
+      --danger: #e53e3e;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+    .container { max-width: 450px; margin: 30px auto; }
+
+    /* パネル */
+    .checkout-panel {
+      background: var(--card-bg); padding: 30px; border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    /* 商品・お支払い情報表示 */
+    .order-summary {
+      background: #edf2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px;
+    }
+    .order-item { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+    .order-total {
+      display: flex; justify-content: space-between; font-size: 18px; font-weight: bold;
+      color: var(--primary); border-top: 1px solid #cbd5e0; padding-top: 10px; margin-top: 10px;
+    }
+
+    /* フォーム要素 */
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+    input {
+      width: 100%; padding: 12px 14px; border: 1px solid #cbd5e0;
+      border-radius: 6px; font-size: 15px; outline: none;
+    }
+    input:focus { border-color: var(--secondary); }
+    
+    .btn-pay {
+      width: 100%; background: var(--secondary); color: white; padding: 14px;
+      border: none; border-radius: 6px; cursor: pointer; font-weight: bold;
+      font-size: 16px; transition: opacity 0.2s; margin-top: 10px;
+    }
+    .btn-pay:hover { opacity: 0.9; }
+    .btn-pay:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    /* メッセージ表示 */
+    .message-box {
+      padding: 12px; border-radius: 6px; font-size: 14px; margin-bottom: 15px; text-align: center;
+    }
+    .message-success { background: #c6f6d5; color: #22543d; border: 1px solid #9ae6b4; }
+    .message-error { background: #fed7d7; color: #742a2a; border: 1px solid #feb2b2; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<!-- 画面の一番上に追加 -->
+<script src="menu.js"></script>
+<div id="common-menu-area"></div>
+<body>
+
+  <div class="container">
+    <div class="checkout-panel">
+      <h2 style="margin-top:0; text-align:center; color: var(--primary);">MU Card 決済</h2>
+
+      <!-- お支払い内容確認エリア -->
+      <div class="order-summary">
+        <div class="order-item">
+          <span>注文内容:</span>
+          <span id="itemName">ポイント交換手続き</span>
+        </div>
+        <div class="order-total">
+          <span>お支払い合計:</span>
+          <span id="itemPriceDisplay">0pt</span>
+        </div>
+      </div>
+
+      <!-- メッセージ表示エリア -->
+      <div id="messageArea" class="message-box hidden"></div>
+
+      <!-- 決済フォーム -->
+      <form id="payForm" onsubmit="executePayment(event)">
+        <div class="form-group">
+          <label for="cardNumber">MUカード番号 (15桁)</label>
+          <input type="text" id="cardNumber" required maxlength="15" placeholder="例: 453212345678901">
+        </div>
+
+        <div class="form-group">
+          <label for="cardPin">MUクレジット暗証番号 (4桁)</label>
+          <input type="password" id="cardPin" required maxlength="4" pattern="\d{4}" placeholder="ご登録時に設定していただいた4桁の暗証番号">
+        </div>
+
+        <button type="submit" class="btn-pay" id="paySubmitBtn">支払いを確定する</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ★デプロイしたGASのウェブアプリURLを設定してください
+    const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxH5I-rHTVeI9exOkZc4261pWL3YzZI9Ou2kcAs9QEWNzsdctGaZ_vkBdW-2dKDFg/exec";
+
+    // 決済金額を保持する変数
+    let PAYMENT_AMOUNT = 0;
+
+    // 画面が開いたときにURLから金額を自動で読み取る処理
+    window.onload = function() {
+      // URLの「?」より後ろの文字を取得（例: ?1000 の場合は "1000"）
+      let paramValue = window.location.search.substring(1);
+
+      // 「?price=1000」や「?amount=1000」といった形式にも対応できるよう判定
+      if (paramValue.includes('=')) {
+        const urlParams = new URLSearchParams(window.location.search);
+        paramValue = urlParams.get('price') || urlParams.get('amount') || "0pt";
+      }
+
+      // 取得した文字を数字に変換
+      PAYMENT_AMOUNT = parseInt(paramValue, 10);
+
+      // 数字が取れなかった場合や0以下の場合は初期値（0円）を設定
+      if (isNaN(PAYMENT_AMOUNT) || PAYMENT_AMOUNT <= 0) {
+        PAYMENT_AMOUNT = 0;
+      }
+
+      // 画面上の金額表示を更新
+      document.getElementById('itemPriceDisplay').innerText = `${PAYMENT_AMOUNT.toLocaleString()}pt`;
+    };
+
+    // 決済実行ハンドラ
+    async function executePayment(e) {
+      e.preventDefault();
+
+      if (GAS_WEBAPP_URL.includes("YOUR_SCRIPT_ID")) {
+        showMessage("GASのURLが未設定です。コード内のGAS_WEBAPP_URLを設定してください。", false);
+        return;
+      }
+
+      const submitBtn = document.getElementById('paySubmitBtn');
+      const cardNumber = document.getElementById('cardNumber').value.trim();
+      const pin = document.getElementById('cardPin').value.trim();
+
+      // ボタンの無効化とローディング表示
+      submitBtn.disabled = true;
+      submitBtn.innerText = "決済処理中...";
+      hideMessage();
+
+      try {
+        // GASへ決済リクエスト（action: 'pay'）を送信
+        const url = GAS_WEBAPP_URL + "?action=pay";
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: 'pay',
+            cardNumber: cardNumber,
+            pin: pin,
+            amount: PAYMENT_AMOUNT
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showMessage(`決済が完了しました！\n残高: ¥${Number(result.newBalance).toLocaleString()}`, true);
+          document.getElementById('payForm').reset();
+        } else {
+          showMessage("決済エラー: " + result.message, false);
+        }
+      } catch (err) {
+        showMessage("通信エラーが発生しました: " + err.message, false);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "支払いを確定する";
+      }
+    }
+
+    // メッセージ表示用ヘルパー
+    function showMessage(msg, isSuccess) {
+      const msgBox = document.getElementById('messageArea');
+      msgBox.innerText = msg;
+      msgBox.className = "message-box " + (isSuccess ? "message-success" : "message-error");
+    }
+
+    function hideMessage() {
+      const msgBox = document.getElementById('messageArea');
+      msgBox.className = "message-box hidden";
+    }
+  </script>
+</body>
+</html>

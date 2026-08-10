@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MU Card 公式ポータルサイト</title>
+  
+  <!-- 共通メニューファイルを読み込み -->
+  <script src="menu.js"></script>
+
+  <style>
+    :root {
+      --primary: #1a365d;
+      --secondary: #2b6cb0;
+      --accent: #d69e2e;
+      --bg: #f7fafc;
+      --card-bg: #ffffff;
+      --text: #2d3748;
+      --text-muted: #718096;
+      --border: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; line-height: 1.6; }
+    .container { max-width: 800px; margin: 0 auto; }
+
+    /* ヒーローセクション */
+    .hero {
+      background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%);
+      color: white; border-radius: 16px; padding: 40px 25px;
+      text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.12); margin-bottom: 30px;
+    }
+    .hero h1 { font-size: 28px; margin: 0 0 10px 0; font-weight: 700; letter-spacing: 1px; }
+    .hero p { font-size: 15px; opacity: 0.9; margin: 0 0 25px 0; }
+    .hero-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-hero {
+      padding: 12px 24px; border-radius: 8px; font-weight: bold; text-decoration: none;
+      font-size: 15px; transition: transform 0.2s, opacity 0.2s;
+    }
+    .btn-hero:hover { transform: translateY(-2px); opacity: 0.95; }
+    .btn-hero-main { background: var(--accent); color: #1a202c; }
+    .btn-hero-sub { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); }
+
+    /* お知らせ・連絡事項セクション */
+    .section-card {
+      background: var(--card-bg); border-radius: 14px; padding: 25px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.04); border: 1px solid var(--border); margin-bottom: 30px;
+    }
+    .section-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid var(--border);
+    }
+    .section-title { font-size: 18px; font-weight: bold; color: var(--primary); margin: 0; display: flex; align-items: center; gap: 8px; }
+
+    /* お知らせリスト */
+    .news-list { list-style: none; padding: 0; margin: 0; }
+    .news-item {
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .news-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .news-meta { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    .news-date { color: var(--text-muted); font-weight: 500; }
+    .badge {
+      padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; color: white;
+    }
+    .badge-important { background-color: #e53e3e; } /* 重要 */
+    .badge-info { background-color: #3182ce; }      /* お知らせ */
+    .badge-maint { background-color: #dd6b20; }     /* メンテナンス */
+    .news-title { font-weight: 600; font-size: 15px; color: var(--text); }
+    .news-detail { font-size: 13px; color: #4a5568; margin-top: 4px; white-space: pre-wrap; }
+
+    /* 機能紹介カード */
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .feature-card {
+      background: var(--card-bg); padding: 20px; border-radius: 12px;
+      border: 1px solid var(--border); text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+    .feature-icon { font-size: 32px; margin-bottom: 10px; }
+    .feature-title { font-weight: bold; margin-bottom: 6px; color: var(--primary); }
+    .feature-desc { font-size: 13px; color: var(--text-muted); margin: 0; }
+
+    /* フッター */
+    footer { text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <!-- メニュー表示エリア -->
+  <div id="common-menu-area"></div>
+
+  <div class="container">
+
+    <!-- ヒーローエリア -->
+    <header class="hero">
+      <h1>MU Card 公式ポータル</h1>
+      <p>キャッシュレス決済・オンラインチャージ・特典交換をスムーズに</p>
+      <div class="hero-buttons">
+        <a href="mu-card-user.html" class="btn-hero btn-hero-main">会員マイページ / 新規登録</a>
+        <a href="prize.html" class="btn-hero btn-hero-sub">🎁 賞品ショップを見る</a>
+      </div>
+    </header>
+
+    <!-- 連絡事項・お知らせセクション -->
+    <section class="section-card">
+      <div class="section-header">
+        <h2 class="section-title">📢 お知らせ・重要なお知らせ</h2>
+      </div>
+      <ul class="news-list" id="newsContainer">
+        <!-- JavaScriptで自動描画されます -->
+      </ul>
+    </section>
+
+    <!-- MUカードの特長 -->
+    <section class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">💳</div>
+        <div class="feature-title">かんたん決済</div>
+        <p class="feature-desc">カード番号と暗証番号入力で、提携サイトの決済がスムーズに完了。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">即時チャージ</div>
+        <p class="feature-desc">マイページからいつでも残高チャージ。使いたい時にすぐ利用可能。</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎁</div>
+        <div class="feature-title">限定賞品交換</div>
+        <p class="feature-desc">貯まった残高やポイントで、魅力的な特典や賞品と引き換え可能。</p>
+      </div>
+    </section>
+
+    <!-- フッター -->
+    <footer>
+      &copy; MU Card Systems. All Rights Reserved.
+    </footer>
+
+  </div>
+
+  <script>
+    // ★連絡事項・お知らせデータ（ここを編集するだけで更新できます）
+    const NEWS_DATA = [
+      {
+        date: "2026.08.10",
+        type: "important", // important (重要), info (お知らせ), maint (メンテナンス)
+        typeLabel: "重要",
+        title: "セキュリティ強化に伴う暗証番号確認のお願い",
+        detail: "安全なご利用のため、マイページログイン時の認証を強化いたしました。暗証番号の管理にご注意ください。"
+      },
+      {
+        date: "2026.08.01",
+        type: "maint",
+        typeLabel: "メンテナンス",
+        title: "定期システムメンテナンスのお知らせ（8/15 2:00~5:00）",
+        detail: "上記時間帯において、一時的にオンラインチャージおよび決済機能がご利用いただけません。"
+      },
+      {
+        date: "2026.07.20",
+        type: "info",
+        typeLabel: "お知らせ",
+        title: "賞品引き換えショップに新しい賞品が追加されました！",
+        detail: "限定デジタルアイテムやチケットなど、新しい賞品ラインナップを追加いたしました。「賞品ショップ」よりご確認ください。"
+      }
+    ];
+
+    // お知らせを描画する処理
+    function renderNews() {
+      const container = document.getElementById('newsContainer');
+      container.innerHTML = '';
+
+      NEWS_DATA.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'news-item';
+        
+        let badgeClass = 'badge-info';
+        if (item.type === 'important') badgeClass = 'badge-important';
+        if (item.type === 'maint') badgeClass = 'badge-maint';
+
+        li.innerHTML = `
+          <div class="news-meta">
+            <span class="news-date">${item.date}</span>
+            <span class="badge ${badgeClass}">${item.typeLabel}</span>
+          </div>
+          <div class="news-title">${item.title}</div>
+          <div class="news-detail">${item.detail}</div>
+        `;
+        container.appendChild(li);
+      });
+    }
+
+    // 初期化実行
+    window.onload = renderNews;
+  </script>
+</body>
+</html>

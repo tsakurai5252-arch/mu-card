@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    :root {
+      --primary: #1a365d;
+      --secondary: #2b6cb0;
+      --accent: #d69e2e;
+      --bg: #f7fafc;
+      --card-bg: #ffffff;
+      --text: #2d3748;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    /* ヘッダー */
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white; padding: 20px 30px; border-radius: 12px;
+      margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+    header p { margin: 5px 0 0 0; opacity: 0.8; font-size: 14px; }
+
+    /* ナビゲーションタブ */
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab-btn {
+      padding: 12px 24px; border: none; background: #e2e8f0;
+      color: var(--text); border-radius: 8px; cursor: pointer;
+      font-weight: bold; transition: 0.2s;
+    }
+    .tab-btn.active { background: var(--primary); color: white; }
+
+    /* メインコンテンツエリア */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .panel {
+      background: var(--card-bg); padding: 25px; border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px;
+    }
+
+    /* フォーム要素 */
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px; }
+    input, select {
+      width: 100%; padding: 10px 14px; border: 1px solid #cbd5e0;
+      border-radius: 6px; font-size: 14px; outline: none;
+    }
+    input:focus, select:focus { border-color: var(--secondary); }
+    
+    .btn {
+      background: var(--secondary); color: white; padding: 10px 20px;
+      border: none; border-radius: 6px; cursor: pointer; font-weight: 600;
+      transition: background 0.2s; text-decoration: none; display: inline-block;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn-deposit { background: #38a169; }
+    .btn-pay { background: #e53e3e; }
+    .btn-outline { background: transparent; border: 1px solid var(--secondary); color: var(--secondary); }
+    .btn-outline:hover { background: #ebf8ff; }
+
+    /* カードデザイン風プレビュー */
+    .card-preview {
+      width: 320px; height: 190px; border-radius: 14px; padding: 20px;
+      color: white; background: linear-gradient(135deg, #2d3748, #1a202c);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.2); position: relative;
+      margin: 20px 0; overflow: hidden;
+    }
+    .card-preview.ブロンズ { background: linear-gradient(135deg, #7b341e, #9c4221); }
+    .card-preview.シルバー { background: linear-gradient(135deg, #718096, #a0aec0); }
+    .card-preview.ゴールド { background: linear-gradient(135deg, #b7791f, #d69e2e); }
+    .card-preview.プラチナ { background: linear-gradient(135deg, #0f172a, #334155); border: 1px solid #94a3b8; }
+    
+    .card-type { font-size: 18px; font-weight: bold; letter-spacing: 1px; }
+    .card-number { font-size: 16px; letter-spacing: 2px; margin: 25px 0 15px 0; font-family: monospace; }
+    .card-footer { display: flex; justify-content: space-between; font-size: 12px; }
+
+    /* 発行完了画面専用スタイル */
+    .success-header { text-align: center; margin-bottom: 25px; }
+    .success-icon {
+      width: 60px; height: 60px; background: #c6f6d5; color: #22543d;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 30px; font-weight: bold; margin: 0 auto 15px auto;
+    }
+    .complete-card-wrapper { display: flex; justify-content: center; margin-bottom: 25px; }
+
+    /* テーブルデザイン */
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+    th { background-color: #f7fafc; font-weight: 600; }
+    
+    /* ステータスバッジ */
+    .badge {
+      padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block;
+    }
+    .badge-true { background: #c6f6d5; color: #22543d; }
+    .badge-false { background: #fed7d7; color: #742a2a; }
+    .badge-pause { background: #feebc8; color: #744210; }
+
+    /* レスポンシブグリッド */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<!-- 画面の一番上に追加 -->
+<script src="menu.js"></script>
+<div id="common-menu-area"></div>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>MU Card Management System</h1>
+      <p>MUカード 発行・入金・決済統合管理ポータル</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="btn-tab-list" onclick="switchTab('tab-list')">カード一覧・検索</button>
+      <button class="tab-btn" id="btn-tab-create" onclick="switchTab('tab-create')">新規カード発行</button>
+      <button class="tab-btn" id="btn-tab-deposit" onclick="switchTab('tab-deposit')">入金（チャージ）</button>
+      <button class="tab-btn" id="btn-tab-pay" onclick="switchTab('tab-pay')">カード決済</button>
+    </div>
+
+    <!-- 1. カード一覧・検索 -->
+    <div id="tab-list" class="tab-content active">
+      <div class="panel">
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <input type="text" id="searchInput" placeholder="カード番号・会員名・フリガナで検索..." onkeyup="filterCards()">
+          <button class="btn" onclick="loadCards()">最新情報に更新</button>
+        </div>
+
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>カード番号</th>
+                <th>会員番号</th>
+                <th>氏名 (フリガナ)</th>
+                <th>ランク</th>
+                <th>有効期限</th>
+                <th>残高</th>
+                <th>暗証番号</th>
+                <th>状態</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="cardTableBody">
+              <tr><td colspan="9" style="text-align:center;">データを読み込み中...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 新規カード発行 -->
+    <div id="tab-create" class="tab-content">
+      <div class="panel grid-2">
+        <div>
+          <h3>会員情報入力</h3>
+          <form id="createForm" onsubmit="handleCreateCard(event)">
+            <div class="form-group">
+              <label>会員氏名</label>
+              <input type="text" id="memberName" required placeholder="例: 山田 太郎">
+            </div>
+            <div class="form-group">
+              <label>フリガナ</label>
+              <input type="text" id="kanaName" required placeholder="例: ヤマダ タロウ">
+            </div>
+            <div class="form-group">
+              <label>暗証番号 (数字4桁)</label>
+              <input type="password" id="pin" maxlength="4" pattern="\d{4}" required placeholder="例: 1234">
+            </div>
+            <div class="form-group">
+              <label>カードランク</label>
+              <select id="cardRank" onchange="updatePreview()">
+                <option value="ノーマル">ノーマル</option>
+                <option value="ブロンズ">ブロンズ</option>
+                <option value="シルバー">シルバー</option>
+                <option value="ゴールド">ゴールド</option>
+                <option value="プラチナ">プラチナ</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>初期チャージ金額 (円)</label>
+              <!-- step="1" に変更して自由な金額を入力可能に修正 -->
+              <input type="number" id="initialBalance" value="0" min="0" step="1" placeholder="例: 1000">
+            </div>
+            <button type="submit" class="btn" id="createSubmitBtn">カードを発行する</button>
+          </form>
+        </div>
+
+        <div>
+          <h3>カード発行プレビュー</h3>
+          <div class="card-preview ノーマル" id="cardPreview">
+            <div class="card-type">MU CARD</div>
+            <div class="card-number">4532 •••• •••• ••••</div>
+            <div class="card-footer">
+              <div>
+                <div style="font-size: 8px; opacity:0.8;">MEMBER NAME</div>
+                <div id="previewName">ヤマダ タロウ</div>
+              </div>
+              <div>
+                <div style="font-size: 8px; opacity:0.8;">RANK</div>
+                <div id="previewRank">ノーマル</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. カード発行完了画面 -->
+    <div id="tab-complete" class="tab-content">
+      <div class="panel" style="max-width: 700px; margin: 0 auto;">
+        <div class="success-header">
+          <div class="success-icon">✓</div>
+          <h2 style="margin: 0; color: #22543d;">カードの発行が完了しました</h2>
+          <p style="color: #718096; margin-top: 5px;">データベースへの登録および初期設定が正常に完了しました。</p>
+        </div>
+
+        <!-- 完成版カード券面表示 -->
+        <div class="complete-card-wrapper">
+          <div class="card-preview ノーマル" id="completeCardPreview">
+            <div class="card-type">MU CARD</div>
+            <div class="card-number" id="completeCardNumber">4532 0000 0000 0000</div>
+            <div class="card-footer">
+              <div>
+                <div style="font-size: 8px; opacity:0.8;">MEMBER NAME</div>
+                <div id="completeName">ヤマダ タロウ</div>
+              </div>
+              <div>
+                <div style="font-size: 8px; opacity:0.8;">EXPIRE</div>
+                <div id="completeExpire">2029/08</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 発行詳細スペック -->
+        <table>
+          <tbody>
+            <tr>
+              <th style="width: 35%;">会員番号</th>
+              <td id="completeMemberId" style="font-weight: bold;">-</td>
+            </tr>
+            <tr>
+              <th>カード番号</th>
+              <td id="completeCardNumText" style="font-weight: bold; font-family: monospace;">-</td>
+            </tr>
+            <tr>
+              <th>会員氏名</th>
+              <td id="completeFullName">-</td>
+            </tr>
+            <tr>
+              <th>カードランク</th>
+              <td id="completeRankText">-</td>
+            </tr>
+            <tr>
+              <th>有効期限</th>
+              <td id="completeExpireText">-</td>
+            </tr>
+            <tr>
+              <th>初期設定残高</th>
+              <td id="completeBalanceText" style="color: #2b6cb0; font-weight: bold;">-</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- アクションボタン -->
+        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
+          <button class="btn btn-outline" onclick="switchTab('tab-create')">続けてカードを発行する</button>
+          <button class="btn" onclick="switchTab('tab-list')">カード一覧で確認する</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 入金（チャージ） -->
+    <div id="tab-deposit" class="tab-content">
+      <div class="panel" style="max-width: 500px; margin: 0 auto;">
+        <h3>カード入金（チャージ）</h3>
+        <form onsubmit="handleDeposit(event)">
+          <div class="form-group">
+            <label>カード番号 (15桁)</label>
+            <input type="text" id="depositCardNumber" required placeholder="例: 453212345678901">
+          </div>
+          <div class="form-group">
+            <label>入金金額 (円)</label>
+            <!-- step="1" に変更して自由な金額を入金可能に修正 -->
+            <input type="number" id="depositAmount" required min="1" step="1" placeholder="例: 1000">
+          </div>
+          <button type="submit" class="btn btn-deposit">チャージ実行</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 5. カード決済 -->
+    <div id="tab-pay" class="tab-content">
+      <div class="panel" style="max-width: 500px; margin: 0 auto;">
+        <h3>カード決済処理</h3>
+        <form onsubmit="handlePay(event)">
+          <div class="form-group">
+            <label>カード番号 (15桁)</label>
+            <input type="text" id="payCardNumber" required placeholder="例: 453212345678901">
+          </div>
+          <div class="form-group">
+            <label>暗証番号 (4桁)</label>
+            <input type="password" id="payPin" maxlength="4" required placeholder="4桁の数字">
+          </div>
+          <div class="form-group">
+            <label>決済金額 (円)</label>
+            <input type="number" id="payAmount" required min="1" step="1" placeholder="例: 500">
+          </div>
+          <button type="submit" class="btn btn-pay">決済を実行する</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ★ここにデプロイしたGASのウェブアプリURLを設定します
+    const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxH5I-rHTVeI9exOkZc4261pWL3YzZI9Ou2kcAs9QEWNzsdctGaZ_vkBdW-2dKDFg/exec";
+
+    let cardDataStore = [];
+
+    // 初期化ロード
+    window.onload = function() {
+      loadCards();
+      document.getElementById('kanaName').addEventListener('input', updatePreview);
+    };
+
+    // 通信用共通ヘルパー関数（actionをURLパラメータとしても確実に送る）
+    async function sendGasApi(payload) {
+      if (GAS_WEBAPP_URL.includes("YOUR_SCRIPT_ID")) {
+        alert("GAS_WEBAPP_URL が初期値のままです。デプロイ後のURLに書き換えてください。");
+        return { success: false, message: "URL未設定" };
+      }
+      try {
+        const url = GAS_WEBAPP_URL + "?action=" + encodeURIComponent(payload.action);
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        return await response.json();
+      } catch (err) {
+        return { success: false, message: "通信エラーが発生しました: " + err.message };
+      }
+    }
+
+    // タブ切り替え
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      const targetBtn = document.getElementById('btn-' + tabId);
+      if (targetBtn) targetBtn.classList.add('active');
+      
+      const targetContent = document.getElementById(tabId);
+      if (targetContent) targetContent.classList.add('active');
+
+      if (tabId === 'tab-list') {
+        loadCards();
+      }
+    }
+
+    // プレビュー表示更新
+    function updatePreview() {
+      const rank = document.getElementById('cardRank').value;
+      const kana = document.getElementById('kanaName').value || 'ヤマダ タロウ';
+      
+      const preview = document.getElementById('cardPreview');
+      preview.className = 'card-preview ' + rank;
+      document.getElementById('previewName').innerText = kana;
+      document.getElementById('previewRank').innerText = rank;
+    }
+
+    // 発行完了画面の生成と表示処理
+    function showCompleteScreen(data) {
+      // 1. 券面プレビューの更新
+      const cardPreview = document.getElementById('completeCardPreview');
+      cardPreview.className = 'card-preview ' + data.rank;
+      
+      // カード番号を見やすく4桁ずつフォーマット
+      const formattedCardNum = data.cardNumber.replace(/(.{4})/g, '$1 ').trim();
+      document.getElementById('completeCardNumber').innerText = formattedCardNum;
+      document.getElementById('completeName').innerText = data.kanaName;
+      document.getElementById('completeExpire').innerText = data.expireDate;
+
+      // 2. 明細テーブルの更新
+      document.getElementById('completeMemberId').innerText = data.memberId;
+      document.getElementById('completeCardNumText').innerText = formattedCardNum;
+      document.getElementById('completeFullName').innerText = `${data.memberName} (${data.kanaName})`;
+      document.getElementById('completeRankText').innerText = data.rank;
+      document.getElementById('completeExpireText').innerText = data.expireDate;
+      document.getElementById('completeBalanceText').innerText = `¥${Number(data.initialBalance).toLocaleString()}`;
+
+      // 3. 画面切り替え
+      switchTab('tab-complete');
+    }
+
+    // 全カードのロード
+    async function loadCards() {
+      const res = await sendGasApi({ action: 'getAllCards' });
+      if (res.success) {
+        renderCardTable(res.cards);
+      } else {
+        alert('データ取得失敗: ' + res.message);
+      }
+    }
+
+    // カードテーブルの描画
+    function renderCardTable(cards) {
+      cardDataStore = cards;
+      const tbody = document.getElementById('cardTableBody');
+      tbody.innerHTML = '';
+
+      if (!cards || cards.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">カードデータが存在しません。</td></tr>';
+        return;
+      }
+
+      cards.forEach(card => {
+        const tr = document.createElement('tr');
+        
+        let statusBadge = '';
+        if (card.status === 'TRUE') statusBadge = '<span class="badge badge-true">有効</span>';
+        else if (card.status === 'FALSE') statusBadge = '<span class="badge badge-false">無効</span>';
+        else if (card.status === 'PAUSE') statusBadge = '<span class="badge badge-pause">更新要</span>';
+
+        tr.innerHTML = `
+          <td><strong>${card.cardNumber}</strong></td>
+          <td>${card.memberId}</td>
+          <td>${card.memberName} (${card.kanaName})</td>
+          <td>${card.rank}</td>
+          <td>${card.expireDate}</td>
+          <td>¥${card.balance.toLocaleString()}</td>
+          <td>••••</td>
+          <td>${statusBadge}</td>
+          <td>
+            <select onchange="changeStatus('${card.cardNumber}', this.value)" style="padding: 2px 5px; font-size:12px;">
+              <option value="">状態変更</option>
+              <option value="TRUE">有効 (TRUE)</option>
+              <option value="FALSE">無効 (FALSE)</option>
+              <option value="PAUSE">更新要 (PAUSE)</option>
+            </select>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 検索フィルター
+    function filterCards() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = cardDataStore.filter(card => 
+        card.cardNumber.toLowerCase().includes(query) ||
+        card.memberName.toLowerCase().includes(query) ||
+        card.kanaName.toLowerCase().includes(query) ||
+        card.memberId.toLowerCase().includes(query)
+      );
+      renderCardTable(filtered);
+    }
+
+    // カード新規発行ハンドラ（スプレッドシートへの登録）
+    async function handleCreateCard(e) {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('createSubmitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = '発行処理中...';
+
+      const formData = {
+        memberName: document.getElementById('memberName').value,
+        kanaName: document.getElementById('kanaName').value,
+        pin: document.getElementById('pin').value,
+        rank: document.getElementById('cardRank').value,
+        initialBalance: document.getElementById('initialBalance').value
+      };
+
+      const res = await sendGasApi({
+        action: 'createCard',
+        formData: formData
+      });
+
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'カードを発行する';
+
+      if (res.success) {
+        // フォームのリセット
+        document.getElementById('createForm').reset();
+        updatePreview();
+
+        // 発行完了画面を表示
+        showCompleteScreen(res);
+      } else {
+        alert('エラー: ' + res.message);
+      }
+    }
+
+    // チャージハンドラ
+    async function handleDeposit(e) {
+      e.preventDefault();
+      const cardNumber = document.getElementById('depositCardNumber').value.trim();
+      const amount = document.getElementById('depositAmount').value;
+
+      const res = await sendGasApi({
+        action: 'deposit',
+        cardNumber: cardNumber,
+        amount: amount
+      });
+
+      if (res.success) {
+        alert(`${res.message}\n最新残高: ¥${res.newBalance.toLocaleString()}`);
+        document.getElementById('depositCardNumber').value = '';
+        document.getElementById('depositAmount').value = '';
+        switchTab('tab-list');
+      } else {
+        alert('エラー: ' + res.message);
+      }
+    }
+
+    // 決済ハンドラ
+    async function handlePay(e) {
+      e.preventDefault();
+      const cardNumber = document.getElementById('payCardNumber').value.trim();
+      const pin = document.getElementById('payPin').value.trim();
+      const amount = document.getElementById('payAmount').value;
+
+      const res = await sendGasApi({
+        action: 'pay',
+        cardNumber: cardNumber,
+        pin: pin,
+        amount: amount
+      });
+
+      if (res.success) {
+        alert(`${res.message}\n支払い後残高: ¥${res.newBalance.toLocaleString()}`);
+        document.getElementById('payCardNumber').value = '';
+        document.getElementById('payPin').value = '';
+        document.getElementById('payAmount').value = '';
+        switchTab('tab-list');
+      } else {
+        alert('エラー: ' + res.message);
+      }
+    }
+
+    // ステータス変更
+    async function changeStatus(cardNumber, newStatus) {
+      if (!newStatus) return;
+      if (!confirm(`カード番号 ${cardNumber} のステータスを ${newStatus} に変更しますか？`)) return;
+
+      const res = await sendGasApi({
+        action: 'updateStatus',
+        cardNumber: cardNumber,
+        status: newStatus
+      });
+
+      if (res.success) {
+        loadCards();
+      } else {
+        alert('エラー: ' + res.message);
+      }
+    }
+  </script>
+</body>
+</html>
