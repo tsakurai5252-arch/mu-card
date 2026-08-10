@@ -84,7 +84,7 @@ window.addEventListener('DOMContentLoaded', () => {
         <nav>
           <div class="common-nav-list">
             <div class="header-main-group">
-              <img src="logo.png" alt="ロゴ" class="header-logo">
+              <img src="logo.png" alt="MU" class="header-logo">
               <a href="prize.html" class="common-nav-link">賞品ショップ</a>
               <a href="mu-card-user.html" class="common-nav-link">会員マイページ</a>
               <a href="index.html" class="common-nav-link">ページトップ</a>
