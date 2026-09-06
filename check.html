@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>認証確認中</title>
+</head>
+<body>
+    <p>認証を確認しています...</p>
+
+    <script>
+        const gasUrl = "YOUR_GAS_WEB_APP_URL"; // ←ここにGASのURLを入力
+        
+        // URLのパラメータから暗号キーを取得する
+        const urlParams = new URLSearchParams(window.location.search);
+        const key = urlParams.get("key");
+
+        if (!key) {
+            // キーがない場合は元の画面に戻る
+            history.back();
+        } else {
+            // サーバーに暗号キーの正当性をテストする
+            fetch(`${gasUrl}?action=verify&key=${key}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 成功した場合、index.htmlへ移動
+                        window.location.replace("index.html");
+                    } else {
+                        // 失敗した場合、元の画面に戻る
+                        history.back();
+                    }
+                })
+                .catch(error => {
+                    console.error("通信エラー:", error);
+                    history.back();
+                });
+        }
+    </script>
+</body>
+</html>
